@@ -1,0 +1,3 @@
+type MerkleTree interface {
+  
+}
