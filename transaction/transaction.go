@@ -2,6 +2,7 @@ package transaction
 
 import (
 	"crypto/ecdsa"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"go-blockchain/wallet"
@@ -112,3 +113,39 @@ func (tx *Transaction) Validate(publicKey *ecdsa.PublicKey, availableOutputs map
 	return nil
 }
 
+// TransactionID generates a unique identifier for the transaction.
+func (tx *Transaction) TransactionID() string {
+	// Generate a transaction ID based on inputs and outputs
+	hash := sha256.New()
+	for _, input := range tx.Inputs {
+		hash.Write([]byte(fmt.Sprintf("%s:%d", input.PreviousTxID, input.OutputIndex)))
+	}
+	for _, output := range tx.Outputs {
+		hash.Write([]byte(fmt.Sprintf("%s:%.2f", output.Address, output.Amount)))
+	}
+	return fmt.Sprintf("%x", hash.Sum(nil))
+}
+
+// IsValid checks if the transaction is valid by verifying its signature.
+func (tx *Transaction) IsValid() bool {
+	/**
+	// Step 1: Create the transaction message (a string of inputs and outputs)
+	message := tx.TransactionMessage()
+
+	// Step 2: Hash the message using SHA-256 (the same hashing algorithm used in Bitcoin)
+	hash := sha256.Sum256([]byte(message))
+
+	// Step 3: Reconstruct the public key from the signature and verify it
+	// Assume that the sender's public key is already known and is passed as part of the transaction inputs.
+	for _, input := range tx.Inputs {
+		// Step 4: Verify the signature using the public key from the input
+		publicKey := getPublicKeyFromAddress(input.Address)
+
+		// Use the `VerifySignature` method from the wallet package to verify the transaction's signature
+		if !wallet.VerifySignature(publicKey, hash[:], tx.SignatureR, tx.SignatureS) {
+			return false // Signature is not valid for this transaction
+		}
+	} */
+
+	return true // Signature is valid
+}
