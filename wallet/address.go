@@ -3,7 +3,6 @@ package wallet
 import (
 	"crypto/ecdsa"
 	"encoding/hex"
-	"log"
 
 	"github.com/ethereum/go-ethereum/crypto"
 )

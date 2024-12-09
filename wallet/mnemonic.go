@@ -3,7 +3,8 @@ package wallet
 import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
-	"crypto/rand"
+//"	"crypto/rand"
+	"math/big"
 	"fmt"
 
 	"github.com/tyler-smith/go-bip39"
@@ -34,11 +35,19 @@ func PrivateKeyFromMnemonic(mnemonic string) (*ecdsa.PrivateKey, error) {
 	// Generate a seed from the mnemonic
 	seed := bip39.NewSeed(mnemonic, "") // Empty passphrase for simplicity
 
-	// Use the seed to create a private key
-	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate private key from seed: %w", err)
+	// Derive private key from seed (simplified example)
+	d := new(big.Int).SetBytes(seed[:32]) // Use the first 32 bytes of the seed
+	privateKey := &ecdsa.PrivateKey{
+		D: d,
+		PublicKey: ecdsa.PublicKey{
+			Curve: elliptic.P256(),
+			X:     nil,
+			Y:     nil,
+		},
 	}
+
+	privateKey.PublicKey.X, privateKey.PublicKey.Y = privateKey.PublicKey.Curve.ScalarBaseMult(privateKey.D.Bytes())
 
 	return privateKey, nil
 }
+

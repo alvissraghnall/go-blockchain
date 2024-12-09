@@ -6,7 +6,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"log"
 
 	"github.com/ethereum/go-ethereum/crypto"
 )

@@ -8,7 +8,7 @@ toolchain go1.23.2
 //github.com/lib/pq v1.10.4 // indirect
 require golang.org/x/sys v0.28.0 // indirect
 
-require chain v0.0.0
+//require chain v0.0.0
 
 require (
 	cloud.google.com/go v0.110.0 // indirect
