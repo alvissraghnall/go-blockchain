@@ -49,3 +49,9 @@ func (b *Block) serializeTransactions() string {
 	return string(bytes)
 }
 
+
+// IsValid checks if the block is valid
+func (b *Block) IsValid() bool {
+	// Simple validation: check if the block's hash matches the calculated hash.
+	return b.Hash == b.CalculateHash()
+}
