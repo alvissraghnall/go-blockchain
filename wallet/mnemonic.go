@@ -10,9 +10,37 @@ import (
 	"github.com/tyler-smith/go-bip39"
 )
 
-// GenerateMnemonic creates a new mnemonic phrase.
-func GenerateMnemonic() (string, error) {
-	entropy, err := bip39.NewEntropy(128) // 128 bits for 12-word mnemonic
+// WalletConfig allows customization of wallet generation
+type WalletConfig struct {
+	Curve       elliptic.Curve
+	WordCount   int  // 12 or 24 words
+	UseChecksum bool // Add optional address checksum
+	Passphrase  string
+}
+
+// DefaultConfig provides a standard wallet configuration
+func DefaultConfig() *WalletConfig {
+	return &WalletConfig{
+		Curve:       elliptic.P256(), // Default to P256
+		WordCount:   12,
+		UseChecksum: true,
+		Passphrase:  "",
+	}
+}
+
+// GenerateMnemonic creates a new mnemonic with configurable word count
+func GenerateMnemonic(wordCount int) (string, error) {
+	var entropyBits int
+	switch wordCount {
+	case 12:
+		entropyBits = 128
+	case 24:
+		entropyBits = 256
+	default:
+		return "", fmt.Errorf("invalid word count. must be 12 or 24")
+	}
+
+	entropy, err := bip39.NewEntropy(entropyBits)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate entropy: %w", err)
 	}
@@ -26,21 +54,20 @@ func GenerateMnemonic() (string, error) {
 }
 
 // PrivateKeyFromMnemonic derives a private key from a mnemonic phrase.
-func PrivateKeyFromMnemonic(mnemonic string) (*ecdsa.PrivateKey, error) {
-	// Ensure the mnemonic is valid
+func PrivateKeyFromMnemonic(mnemonic string, config *WalletConfig) (*ecdsa.PrivateKey, error) {
 	if !bip39.IsMnemonicValid(mnemonic) {
 		return nil, fmt.Errorf("invalid mnemonic")
 	}
 
-	// Generate a seed from the mnemonic
-	seed := bip39.NewSeed(mnemonic, "") // Empty passphrase for simplicity
+	// Generate seed with optional passphrase
+	seed := bip39.NewSeed(mnemonic, config.Passphrase)
 
-	// Derive private key from seed (simplified example)
-	d := new(big.Int).SetBytes(seed[:32]) // Use the first 32 bytes of the seed
+	// Derive private key using curve from config
+	d := new(big.Int).SetBytes(seed[:32])
 	privateKey := &ecdsa.PrivateKey{
 		D: d,
 		PublicKey: ecdsa.PublicKey{
-			Curve: elliptic.P256(),
+			Curve: config.Curve,
 			X:     nil,
 			Y:     nil,
 		},
@@ -50,4 +77,3 @@ func PrivateKeyFromMnemonic(mnemonic string) (*ecdsa.PrivateKey, error) {
 
 	return privateKey, nil
 }
-

@@ -1,130 +1,243 @@
 package wallet
 
 import (
-//	"crypto/ecdsa"
+	"crypto/ecdsa"
+	"crypto/elliptic"
 	"testing"
-	"fmt"
+	"strings"
 )
 
-// TestGenerateKeyPair checks if the key pair generation works.
-func TestGenerateKeyPair(t *testing.T) {
-	privateKey, publicKey, err := GenerateKeyPair()
+// Test default wallet configuration creation
+func TestNewWalletWithMnemonic_DefaultConfig(t *testing.T) {
+	config := DefaultConfig()
+	wallet, err := NewWalletWithMnemonic(config)
+	
 	if err != nil {
-		t.Fatalf("GenerateKeyPair failed: %v", err)
+		t.Fatalf("Failed to create wallet with default config: %v", err)
 	}
 
-	if privateKey == nil || publicKey == nil {
-		t.Fatalf("Generated keys should not be nil")
+	// Validate wallet components
+	if wallet.Mnemonic == "" {
+		t.Error("Mnemonic should not be empty")
 	}
-
-	fmt.Printf("Private Key: %s\n", PrivateKeyToHex(privateKey))
-	fmt.Printf("Public Key: %s\n", PublicKeyToHex(publicKey))
-
-}
-
-// TestPrivateKeyToHex ensures private key serialization is correct.
-func TestPrivateKeyToHex(t *testing.T) {
-	privateKey, _, err := GenerateKeyPair()
-	if err != nil {
-		t.Fatalf("GenerateKeyPair failed: %v", err)
+	
+	if wallet.PrivateKey == nil {
+		t.Error("Private key should not be nil")
 	}
-
-	hexKey := PrivateKeyToHex(privateKey)
-	if len(hexKey) == 0 {
-		t.Errorf("PrivateKeyToHex returned empty string")
+	
+	if wallet.PublicKey == nil {
+		t.Error("Public key should not be nil")
 	}
-}
-
-// TestPublicKeyToHex ensures public key serialization is correct.
-func TestPublicKeyToHex(t *testing.T) {
-	_, publicKey, err := GenerateKeyPair()
-	if err != nil {
-		t.Fatalf("GenerateKeyPair failed: %v", err)
-	}
-
-	hexKey := PublicKeyToHex(publicKey)
-	if len(hexKey) == 0 {
-		t.Errorf("PublicKeyToHex returned empty string")
+	
+	if wallet.Address == "" {
+		t.Error("Address should not be empty")
 	}
 }
 
-// TestAddressFromPublicKey checks if the address generation logic is valid.
-func TestAddressFromPublicKey(t *testing.T) {
-	_, publicKey, err := GenerateKeyPair()
-	if err != nil {
-		t.Fatalf("GenerateKeyPair failed: %v", err)
+// Test wallet creation with custom configuration
+func TestNewWalletWithMnemonic_CustomConfig(t *testing.T) {
+	testCases := []struct {
+		name       string
+		wordCount  int
+		curve      elliptic.Curve
+		passphrase string
+	}{
+		{
+			name:       "12-word mnemonic with P256",
+			wordCount:  12,
+			curve:      elliptic.P256(),
+			passphrase: "",
+		},
+		{
+			name:       "24-word mnemonic with P256",
+			wordCount:  24,
+			curve:      elliptic.P256(),
+			passphrase: "test passphrase",
+		},
 	}
 
-	address := AddressFromPublicKey(publicKey)
-	if len(address) == 0 {
-		t.Errorf("AddressFromPublicKey returned empty address")
-	}
-}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			config := &WalletConfig{
+				WordCount:   tc.wordCount,
+				Curve:       tc.curve,
+				Passphrase:  tc.passphrase,
+				UseChecksum: true,
+			}
 
-// TestGenerateMnemonic verifies that mnemonics are generated correctly.
-func TestGenerateMnemonic(t *testing.T) {
-	mnemonic, err := GenerateMnemonic()
-	if err != nil {
-		t.Fatalf("GenerateMnemonic failed: %v", err)
-	}
+			wallet, err := NewWalletWithMnemonic(config)
+			if err != nil {
+				t.Fatalf("Failed to create wallet: %v", err)
+			}
 
-	if len(mnemonic) == 0 {
-		t.Errorf("Generated mnemonic is empty")
-	}
-}
-
-// TestPrivateKeyFromMnemonic checks if private key derivation from mnemonic works.
-func TestPrivateKeyFromMnemonic(t *testing.T) {
-	mnemonic, err := GenerateMnemonic()
-	if err != nil {
-		t.Fatalf("GenerateMnemonic failed: %v", err)
-	}
-
-	privateKey, err := PrivateKeyFromMnemonic(mnemonic)
-	if err != nil {
-		t.Fatalf("PrivateKeyFromMnemonic failed: %v", err)
-	}
-
-	if privateKey == nil {
-		t.Errorf("PrivateKeyFromMnemonic returned nil private key")
-	}
-}
-
-// TestNewWalletWithMnemonic checks if wallet creation with mnemonic works.
-func TestNewWalletWithMnemonic(t *testing.T) {
-	wallet, err := NewWalletWithMnemonic()
-	if err != nil {
-		t.Fatalf("NewWalletWithMnemonic failed: %v", err)
-	}
-
-	if wallet.PrivateKey == nil || wallet.PublicKey == nil {
-		t.Fatalf("Wallet keys should not be nil")
-	}
-
-	if len(wallet.Mnemonic) == 0 {
-		t.Errorf("Wallet mnemonic is empty")
-	}
-
-	if len(wallet.Address) == 0 {
-		t.Errorf("Wallet address is empty")
+			// Validate mnemonic word count
+			mnemonicWords := len(strings.Split(wallet.Mnemonic, " "))
+			if mnemonicWords != tc.wordCount {
+				t.Errorf("Expected %d word mnemonic, got %d words", tc.wordCount, mnemonicWords)
+			}
+		})
 	}
 }
 
-// TestRecoverWalletFromMnemonic checks if wallet recovery works.
+// Test wallet recovery from mnemonic
 func TestRecoverWalletFromMnemonic(t *testing.T) {
-	// Create a new wallet to get a valid mnemonic
-	wallet, err := NewWalletWithMnemonic()
+	// Create an initial wallet
+	config := DefaultConfig()
+	originalWallet, err := NewWalletWithMnemonic(config)
 	if err != nil {
-		t.Fatalf("NewWalletWithMnemonic failed: %v", err)
+		t.Fatalf("Failed to create original wallet: %v", err)
 	}
 
-	// Recover the wallet using the mnemonic
-	recoveredWallet, err := RecoverWalletFromMnemonic(wallet.Mnemonic)
+	// Recover wallet using the same mnemonic
+	recoveredWallet, err := RecoverWalletFromMnemonic(originalWallet.Mnemonic, config)
 	if err != nil {
-		t.Fatalf("RecoverWalletFromMnemonic failed: %v", err)
+		t.Fatalf("Failed to recover wallet: %v", err)
 	}
 
-	if wallet.Address != recoveredWallet.Address {
-		t.Errorf("Recovered wallet address does not match original address")
+	// Compare critical wallet components
+	compareWallets(t, originalWallet, recoveredWallet)
+}
+
+// Test wallet recovery with different configurations
+func TestRecoverWalletFromMnemonic_DifferentConfigs(t *testing.T) {
+	// Create an initial wallet
+	originalConfig := DefaultConfig()
+	originalWallet, err := NewWalletWithMnemonic(originalConfig)
+	if err != nil {
+		t.Fatalf("Failed to create original wallet: %v", err)
+	}
+
+	testCases := []struct {
+		name           string
+		modifyConfig   func(*WalletConfig)
+		expectDifferent bool
+	}{
+		{
+			name: "Different Passphrase",
+			modifyConfig: func(cfg *WalletConfig) {
+				cfg.Passphrase = "different passphrase"
+			},
+			expectDifferent: true,
+		},
+		{
+			name: "Different Curve",
+			modifyConfig: func(cfg *WalletConfig) {
+				cfg.Curve = elliptic.P384()
+			},
+			expectDifferent: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Clone the original config and modify
+			config := &WalletConfig{
+				WordCount:   originalConfig.WordCount,
+				Curve:       originalConfig.Curve,
+				Passphrase:  originalConfig.Passphrase,
+				UseChecksum: originalConfig.UseChecksum,
+			}
+			tc.modifyConfig(config)
+
+			// Attempt to recover wallet
+			recoveredWallet, err := RecoverWalletFromMnemonic(originalWallet.Mnemonic, config)
+			if err != nil {
+				t.Fatalf("Failed to recover wallet: %v", err)
+			}
+
+			// Check if wallets are different
+			if tc.expectDifferent {
+				if originalWallet.Address == recoveredWallet.Address {
+					t.Errorf("Expected different wallet addresses")
+				}
+			}
+		})
+	}
+}
+
+// Test invalid mnemonic scenarios
+func TestRecoverWalletFromMnemonic_InvalidMnemonic(t *testing.T) {
+	config := DefaultConfig()
+	
+	testCases := []struct {
+		name     string
+		mnemonic string
+	}{
+		{
+			name:     "Empty Mnemonic",
+			mnemonic: "",
+		},
+		{
+			name:     "Invalid Mnemonic Words",
+			mnemonic: "invalid mnemonic phrase that does not make sense",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := RecoverWalletFromMnemonic(tc.mnemonic, config)
+			if err == nil {
+				t.Errorf("Expected error for invalid mnemonic, got nil")
+			}
+		})
+	}
+}
+
+// Utility function to compare wallets
+func compareWallets(t *testing.T, w1, w2 *Wallet) {
+	// Compare mnemonics
+	if w1.Mnemonic != w2.Mnemonic {
+		t.Errorf("Mnemonic mismatch: %s != %s", w1.Mnemonic, w2.Mnemonic)
+	}
+
+	// Compare addresses
+	if w1.Address != w2.Address {
+		t.Errorf("Address mismatch: %s != %s", w1.Address, w2.Address)
+	}
+
+	// Compare public keys
+	if !publicKeysEqual(w1.PublicKey, w2.PublicKey) {
+		t.Error("Public keys do not match")
+	}
+}
+
+// Utility function to compare public keys
+func publicKeysEqual(pk1, pk2 *ecdsa.PublicKey) bool {
+	if pk1 == nil || pk2 == nil {
+		return pk1 == pk2
+	}
+
+	return pk1.Curve == pk2.Curve &&
+		pk1.X.Cmp(pk2.X) == 0 &&
+		pk1.Y.Cmp(pk2.Y) == 0
+}
+
+// Benchmark wallet creation
+func BenchmarkNewWalletWithMnemonic(b *testing.B) {
+	config := DefaultConfig()
+	
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := NewWalletWithMnemonic(config)
+		if err != nil {
+			b.Fatalf("Failed to create wallet: %v", err)
+		}
+	}
+}
+
+// Benchmark wallet recovery
+func BenchmarkRecoverWalletFromMnemonic(b *testing.B) {
+	config := DefaultConfig()
+	wallet, err := NewWalletWithMnemonic(config)
+	if err != nil {
+		b.Fatalf("Failed to create initial wallet: %v", err)
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := RecoverWalletFromMnemonic(wallet.Mnemonic, config)
+		if err != nil {
+			b.Fatalf("Failed to recover wallet: %v", err)
+		}
 	}
 }

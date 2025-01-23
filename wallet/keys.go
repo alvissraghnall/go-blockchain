@@ -2,8 +2,8 @@ package wallet
 
 import (
 	"crypto/ecdsa"
-	"crypto/elliptic"
-	"crypto/rand"
+//	"crypto/elliptic"
+//	"crypto/rand"
 	"encoding/hex"
 	"fmt"
 
@@ -11,11 +11,12 @@ import (
 )
 
 // GenerateKeyPair generates a secp256k1 private/public key pair.
-func GenerateKeyPair() (*ecdsa.PrivateKey, *ecdsa.PublicKey, error) {
-	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+func GenerateKeyPair(mnemonic string, config *WalletConfig) (*ecdsa.PrivateKey, *ecdsa.PublicKey, error) {
+	privateKey, err := PrivateKeyFromMnemonic(mnemonic, config)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to generate key pair: %w", err)
+		return nil, nil, fmt.Errorf("failed to derive private key: %w", err)
 	}
+
 	return privateKey, &privateKey.PublicKey, nil
 }
 
