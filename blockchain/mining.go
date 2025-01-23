@@ -2,7 +2,7 @@ package blockchain
 
 import (
 	"fmt"
-	"go-blockchain/transaction"
+	"blockchain/transaction"
 )
 
 // Miner represents a miner who mines blocks.

@@ -5,7 +5,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
-	"go-blockchain/wallet"
+	"blockchain/wallet"
 )
 
 // Transaction represents a blockchain transaction.

@@ -1,4 +1,4 @@
-module go-blockchain
+module blockchain
 
 go 1.22
 
@@ -656,3 +656,5 @@ require (
 )
 
 replace chain v0.0.0 => ./chain
+replace wallet => ./wallet
+replace transactions => ./transactions

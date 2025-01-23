@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
-	"go-blockchain/transaction"
+	"blockchain/transaction"
 )
 
 // Block represents a single block in the blockchain.
@@ -17,6 +17,9 @@ type Block struct {
 	PrevHash     string         		 `json:"prev_hash"`
 	Hash         string         		 `json:"hash"`
 	Nonce        int            	 	 `json:"nonce"`
+	Miner		 string				 `json:"miner"`
+	BlockSize	 uint64				 `json:"blocksize"`
+	Difficulty	 float64			 `json:"difficulty"`
 }
 
 // NewBlock creates a new block.
@@ -27,9 +30,12 @@ func NewBlock(index int, transactions []transaction.Transaction, prevHash string
 		Transactions: transactions,
 		PrevHash:     prevHash,
 		Nonce:        0, // Default nonce before mining
+		Miner:        "",
 	}
 
 	block.Hash = block.CalculateHash()
+	/* CALCULATE BLOCK SIZE && DIFFICULTY */
+
 	return block
 }
 

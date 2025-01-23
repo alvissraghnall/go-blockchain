@@ -2,7 +2,7 @@ package blockchain
 
 import (
 	"testing"
-	"go-blockchain/transaction"
+	"blockchain/transaction"
 )
 
 func TestMining(t *testing.T) {

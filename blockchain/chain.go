@@ -1,10 +1,19 @@
 package blockchain
 
-import "go-blockchain/transaction"
+import (
+	"blockchain/transaction"
+	"fmt"
+ 	"errors"
+)
 
 // Blockchain represents the full blockchain.
 type Blockchain struct {
 	Blocks []*Block
+}
+
+type BlockWithHeight struct {
+	Block
+	height uint64
 }
 
 // NewBlockchain initializes a blockchain with a genesis block.
@@ -14,13 +23,30 @@ func NewBlockchain() *Blockchain {
 }
 
 // AddBlock adds a new block to the blockchain.
-func (bc *Blockchain) AddBlock(transactions []transaction.Transaction) {
-	prevBlock := bc.Blocks[len(bc.Blocks)-1]
-	newBlock := NewBlock(len(bc.Blocks), transactions, prevBlock.Hash)
+func (bc *Blockchain) AddBlock(newBlock Block) {
+	bc.Blocks = append(bc.Blocks, &newBlock)
+}
 
-	// Mine the block before adding
-	newBlock.MineBlock(4)
-	bc.Blocks = append(bc.Blocks, newBlock)
+func (bc *Blockchain) getHead () Block {
+	return *bc.Blocks[len(bc.Blocks) - 1]
+}
+
+func (bc *Blockchain) GetLatestBlock () Block {
+	return bc.getHead()
+}
+
+func (bc *Blockchain) GetHeight() uint64 {
+	return uint64(len(bc.Blocks))
+}
+
+func (bc *Blockchain) GetBlock (hash string) (BlockWithHeight, error) {
+	var i uint64
+	for i = uint64(len(bc.Blocks) - 1); i >= 0; i-- {
+		if hash == bc.Blocks[i].Hash {
+			return BlockWithHeight { height: i, Block: *bc.Blocks[i] }, nil
+		}
+	}
+	return BlockWithHeight {}, errors.New(fmt.Sprintf("No block with hash: %v found!", hash))
 }
 
 // IsValid checks the validity of the blockchain.
