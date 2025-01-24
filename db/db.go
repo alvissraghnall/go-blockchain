@@ -25,7 +25,7 @@ func InitDatabase(dbPath string) (*BlockchainDB, error) {
 
 	// Create blocks table
 	_, err = db.Exec(`
-    CREATE TABLE IF NOT EXISTS blocks (
+    CREATE TABLE IF NOT EXISTS block (
         index INTEGER PRIMARY KEY,
         timestamp INTEGER,
         transactions BLOB,
@@ -36,6 +36,34 @@ func InitDatabase(dbPath string) (*BlockchainDB, error) {
         blocksize INTEGER,
         difficulty REAL
     );
+	`)
+		
+	_, err = db.Exec(`
+			CREATE TABLE IF NOT EXISTS transaction (
+					id INTEGER PRIMARY KEY,
+					block_hash TEXT,
+					FOREIGN KEY (block_hash) REFERENCES block (hash)
+			);
+	`)
+
+	_, err = db.Exec(`
+			CREATE TABLE IF NOT EXISTS transaction_inputs (
+					id INTEGER PRIMARY KEY,
+					transaction_id INTEGER,
+					previous_tx_id TEXT,
+					output_index INTEGER,
+					FOREIGN KEY (transaction_id) REFERENCES transaction (id)
+			);
+	`)
+
+	_, err = db.Exec(`
+			CREATE TABLE IF NOT EXISTS transaction_outputs (
+					id INTEGER PRIMARY KEY,
+					transaction_id INTEGER,
+					address TEXT,
+					amount REAL,
+					FOREIGN KEY (transaction_id) REFERENCES transaction (id)
+			);
 	`)
 
 

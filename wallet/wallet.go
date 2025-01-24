@@ -10,7 +10,7 @@ type Wallet struct {
 	Mnemonic   string
 	PrivateKey *ecdsa.PrivateKey
 	PublicKey  *ecdsa.PublicKey
-	Address    string
+	Address    []byte
 }
 
 // NewWalletWithMnemonic creates a new wallet and generates a mnemonic.

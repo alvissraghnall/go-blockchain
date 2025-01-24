@@ -2,6 +2,8 @@ package wallet
 
 import (
 	"crypto/ecdsa"
+	"golang.org/x/crypto/ripemd160"
+	"crypto/sha256"
 	"encoding/hex"
 	"strings"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -9,16 +11,22 @@ import (
 
 // AddressFromPublicKey generates a Bitcoin-like wallet address from a public key.
 // Uses SHA256 followed by RIPEMD-160 hashing (Bitcoin style).
-func AddressFromPublicKey(publicKey *ecdsa.PublicKey, useChecksum bool) string {
-	publicKeyBytes := crypto.FromECDSAPub(publicKey)[1:] // Remove 0x04 prefix for uncompressed key
-	hash := crypto.Keccak256(publicKeyBytes)            // Keccak-256 hash of public key
-	address := hash[len(hash)-20:]                      // Use last 20 bytes (Bitcoin uses RIPEMD-160 after SHA256)
-	
-	if useChecksum {
-		return calculateChecksumAddress(address)
-	}
+func AddressFromPublicKey(publicKey *ecdsa.PublicKey, useChecksum bool) []byte {
+    publicKeyBytes := crypto.FromECDSAPub(publicKey)[1:] // Remove 0x04 prefix for uncompressed keys
+    // Use SHA256 followed by RIPEMD-160 hashing (Bitcoin style)
+    sha256Hash := sha256.Sum256(publicKeyBytes)
 
-	return hex.EncodeToString(address)
+	secondHash := ripemd160.New()
+	secondHash.Write(sha256Hash[:])
+
+    ripemd160Hash := secondHash.Sum(nil)
+
+    address := ripemd160Hash
+    /*  if useChecksum {
+        return calculateChecksumAddress(address)
+    }*/
+    //return base58.Encode(address)
+	return address
 }
 
 // calculateChecksumAddress adds a simple checksum mechanism

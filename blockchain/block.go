@@ -9,6 +9,18 @@ import (
 	"blockchain/transaction"
 )
 
+type BlockInterface interface {
+    GetIndex() int
+    GetTimestamp() int64
+    GetTransactions() []transaction.Transaction
+    GetPrevHash() string
+    GetHash() string
+    GetNonce() int
+    GetMiner() string
+    GetBlockSize() uint64
+    GetDifficulty() float64
+}
+
 // Block represents a single block in the blockchain.
 type Block struct {
 	Index        int           		 `json:"index"`
@@ -20,6 +32,42 @@ type Block struct {
 	Miner		 string				 `json:"miner"`
 	BlockSize	 uint64				 `json:"blocksize"`
 	Difficulty	 float64			 `json:"difficulty"`
+}
+
+func (b *Block) GetIndex() int {
+    return b.Index
+}
+
+func (b *Block) GetTimestamp() int64 {
+    return b.Timestamp
+}
+
+func (b *Block) GetTransactions() []transaction.TransactionInterface {
+    return b.Transactions
+}
+
+func (b *Block) GetPrevHash() string {
+    return b.PrevHash
+}
+
+func (b *Block) GetHash() string {
+    return b.Hash
+}
+
+func (b *Block) GetNonce() int {
+    return b.Nonce
+}
+
+func (b *Block) GetMiner() string {
+    return b.Miner
+}
+
+func (b *Block) GetBlockSize() uint64 {
+    return b.BlockSize
+}
+
+func (b *Block) GetDifficulty() float64 {
+    return b.Difficulty
 }
 
 // NewBlock creates a new block.

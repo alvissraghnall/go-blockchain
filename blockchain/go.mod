@@ -2,7 +2,7 @@ module chain
 
 go 1.23.2
 
-replace blockchain/transaction => ../transaction
+replace .blockchain/transaction => ../transaction
 
 replace blockchain/wallet => ../wallet
 

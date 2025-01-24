@@ -3,6 +3,7 @@ module transaction
 go 1.23.2
 
 replace blockchain/wallet => ../wallet
+replace blockchain/chain => ../blockchain
 
 require (
 	blockchain/wallet v0.0.0-00010101000000-000000000000 // indirect

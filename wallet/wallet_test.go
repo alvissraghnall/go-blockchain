@@ -3,6 +3,7 @@ package wallet
 import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
+	"bytes"
 	"testing"
 	"strings"
 )
@@ -29,7 +30,7 @@ func TestNewWalletWithMnemonic_DefaultConfig(t *testing.T) {
 		t.Error("Public key should not be nil")
 	}
 	
-	if wallet.Address == "" {
+	if bytes.Equal(wallet.Address, []byte{}) {
 		t.Error("Address should not be empty")
 	}
 }
@@ -147,7 +148,7 @@ func TestRecoverWalletFromMnemonic_DifferentConfigs(t *testing.T) {
 
 			// Check if wallets are different
 			if tc.expectDifferent {
-				if originalWallet.Address == recoveredWallet.Address {
+				if bytes.Equal(originalWallet.Address, recoveredWallet.Address) {
 					t.Errorf("Expected different wallet addresses")
 				}
 			}
@@ -191,7 +192,7 @@ func compareWallets(t *testing.T, w1, w2 *Wallet) {
 	}
 
 	// Compare addresses
-	if w1.Address != w2.Address {
+	if !bytes.Equal(w1.Address, w2.Address) {
 		t.Errorf("Address mismatch: %s != %s", w1.Address, w2.Address)
 	}
 

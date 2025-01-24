@@ -6,34 +6,75 @@ import (
 	"errors"
 	"fmt"
 	"blockchain/wallet"
+	"blockchain/chain"
 )
 
 // Transaction represents a blockchain transaction.
 type Transaction struct {
-	Inputs     []TransactionInput
-	Outputs    []TransactionOutput
+	Inputs     []Input
+	Outputs    []Output
 	SignatureR []byte
 	SignatureS []byte
 }
 
-// TransactionInput references an output from a previous transaction.
-type TransactionInput struct {
-	PreviousTxID string
-	OutputIndex  int
+// Input references an output from a previous transaction.
+type Input struct {
+	// This field represents the hash of the previous transaction that this input is spending from.
+	PreviousTxHash []byte		`json:"previousTxHash"`
+	// This field represents the index of the output in the previous transaction that this input is spending from.
+	OutputIndex    uint64		`json:"outputIndex"`
+	// This field represents the script signature that unlocks the previous transaction output being spent. 
+	ScriptSig      []byte		`json:"scriptSig"`
 }
 
-// TransactionOutput specifies a recipient and amount.
-type TransactionOutput struct {
-	Address string
-	Amount  float64
+// Output specifies a recipient and amount.
+type Output struct {
+	Amount       float64     `json:"amount"`
+    ScriptPubKey []byte      `json:"scriptPubKey"`
+}
+
+// UTXO represents an unspent transaction output.
+type UTXO struct {
+	// This field represents the block in which the transaction containing this UTXO was included.
+    Block        chain.BlockInterface    		`json:"block"`
+	// This field represents the transaction that created this UTXO. 
+    Transaction  Transaction 	`json:"transaction"`
+	// This field represents the index of this UTXO within the transaction that created it.
+    OutputIndex  uint32    		`json:"outputIndex"`
+	// This field represents the amount of cryptocurrency associated with this UTXO.
+    Amount       float64     		`json:"amount"`
 }
 
 // NewTransaction creates a new unsigned transaction.
-func NewTransaction(inputs []TransactionInput, outputs []TransactionOutput) *Transaction {
+func NewTransaction(inputs []Input, outputs []Output) *Transaction {
 	return &Transaction{
 		Inputs:  inputs,
 		Outputs: outputs,
 	}
+}
+
+func NewOutput(amount float64, scriptPubKey []byte) *Output {
+    return &Output{
+        Amount:       amount,
+        ScriptPubKey: scriptPubKey,
+    }
+}
+
+func NewInput(previousTxHash []byte, outputIndex uint64, scriptSig []byte) *Input {
+    return &Input{
+        PreviousTxHash:  previousTxHash,
+		OutputIndex:  	 outputIndex,
+        ScriptSig:    	 scriptSig,
+    }
+}
+
+func NewUTXO(block chain.BlockInterface, transaction Transaction, outputIndex uint64, amount int64) *UTXO {
+    return &UTXO{
+        Block:        block,
+        Transaction:  transaction,
+        OutputIndex:  outputIndex,
+        Amount:       amount,
+    }
 }
 
 // SignTransaction signs a transaction using the sender's private key.
@@ -71,7 +112,7 @@ func (tx *Transaction) TransactionMessage() string {
 }
 
 // Validate checks if a transaction is well-formed and valid.
-func (tx *Transaction) Validate(publicKey *ecdsa.PublicKey, availableOutputs map[string]TransactionOutput) error {
+func (tx *Transaction) Validate(publicKey *ecdsa.PublicKey, availableOutputs map[string]Output) error {
 	// Check inputs and outputs
 	if len(tx.Inputs) == 0 {
 		return errors.New("transaction must have at least one input")
@@ -132,7 +173,7 @@ func (tx *Transaction) IsValid() bool {
 	// Step 1: Create the transaction message (a string of inputs and outputs)
 	message := tx.TransactionMessage()
 
-	// Step 2: Hash the message using SHA-256 (the same hashing algorithm used in Bitcoin)
+	// Step 2: Hash the message using SHA-256 
 	hash := sha256.Sum256([]byte(message))
 
 	// Step 3: Reconstruct the public key from the signature and verify it
