@@ -9,18 +9,23 @@ import (
 
 // Input references an output from a previous transaction.
 type Input struct {
+    ID             int64   `json:"id"`
     // This field represents the hash of the previous transaction that this inp>
     PreviousTxHash []byte       `json:"previousTxHash"`
     // This field represents the index of the output in the previous transactio>
     OutputIndex    uint64       `json:"outputIndex"`
     // This field represents the script signature that unlocks the previous tra>
     ScriptSig      []byte       `json:"scriptSig"`
+	Sequence       uint32  `json:"sequence"`
 }
 
 // Output specifies a recipient and amount.
 type Output struct {
+    ID           uint64   `json:"id"`
     Amount       float64     `json:"amount"`
     ScriptPubKey []byte      `json:"scriptPubKey"`
+    ScriptType   string  `json:"script_type"`
+    Address      []byte  `json:"address,omitempty"`
 }
 
 // UTXO represents an unspent transaction output.
@@ -50,6 +55,9 @@ type Block struct {
 
 // Transaction represents a blockchain transaction.
 type Transaction struct {
+  ID       int64              `json:"id"`
+  Version  int32              `json:"version"`
+  Locktime uint32             `json:"locktime"`
   Inputs     []Input
   Outputs    []Output
 }
