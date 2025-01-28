@@ -2,12 +2,16 @@ module chain
 
 go 1.23.2
 
-replace .blockchain/transaction => ../transaction
+replace blockchain/types => ../types
+
+replace blockchain/transaction => ./transaction
 
 replace blockchain/wallet => ../wallet
 
 require (
 	blockchain/transaction v0.0.0-00010101000000-000000000000 // indirect
+	blockchain/types v0.0.0-00010101000000-000000000000 // indirect
+	//	blockchain/types v0.0.0-00010101000000-000000000000 // indirect
 	blockchain/wallet v0.0.0-00010101000000-000000000000 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
 	github.com/ethereum/go-ethereum v1.14.12 // indirect

@@ -3,6 +3,7 @@ package blockchain
 import (
 	"fmt"
 	"blockchain/transaction"
+	"blockchain/types"
 )
 
 // Miner represents a miner who mines blocks.
@@ -22,7 +23,7 @@ func NewMiner(blockchain *Blockchain, transactionPool *transaction.TransactionPo
 }
 
 // Mine retrieves transactions, mines a block, and appends it to the chain.
-func (m *Miner) Mine() (*Block, error) {
+func (m *Miner) Mine() (*types.Block, error) {
 	transactions := m.TransactionPool.GetTransactions()
 
 	if len(transactions) == 0 {
@@ -36,7 +37,7 @@ func (m *Miner) Mine() (*Block, error) {
 	newBlock := NewBlock(len(m.Blockchain.Blocks), transactions, prevBlock.Hash)
 
 	// Perform mining (Proof-of-Work)
-	newBlock.MineBlock(m.Difficulty)
+//	newBlock.MineBlock(m.Difficulty)
 
 	// Add the mined block to the blockchain
 	m.Blockchain.Blocks = append(m.Blockchain.Blocks, newBlock)

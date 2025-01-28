@@ -1,37 +1,37 @@
 package blockchain
 
 import (
-	"blockchain/transaction"
+	"blockchain/types"
 	"fmt"
  	"errors"
 )
 
 // Blockchain represents the full blockchain.
 type Blockchain struct {
-	Blocks []*Block
+	Blocks []*types.Block
 }
 
 type BlockWithHeight struct {
-	Block
+	types.Block
 	height uint64
 }
 
 // NewBlockchain initializes a blockchain with a genesis block.
 func NewBlockchain() *Blockchain {
-	genesisBlock := NewBlock(0, []transaction.Transaction{}, "0")
-	return &Blockchain{Blocks: []*Block{genesisBlock}}
+	genesisBlock := NewBlock(0, []types.Transaction{}, "0")
+	return &Blockchain{Blocks: []*types.Block{genesisBlock}}
 }
 
 // AddBlock adds a new block to the blockchain.
-func (bc *Blockchain) AddBlock(newBlock Block) {
+func (bc *Blockchain) AddBlock(newBlock types.Block) {
 	bc.Blocks = append(bc.Blocks, &newBlock)
 }
 
-func (bc *Blockchain) getHead () Block {
+func (bc *Blockchain) getHead () types.Block {
 	return *bc.Blocks[len(bc.Blocks) - 1]
 }
 
-func (bc *Blockchain) GetLatestBlock () Block {
+func (bc *Blockchain) GetLatestBlock () types.Block {
 	return bc.getHead()
 }
 
