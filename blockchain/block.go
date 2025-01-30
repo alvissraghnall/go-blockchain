@@ -7,7 +7,7 @@ import (
 )
 
 // NewBlock creates a new block
-func NewBlock(index int, transactions []types.Transaction, prevHash string) *types.Block {
+func NewBlock(index int, transactions []types.Transaction, prevHash []byte) *types.Block {
 	block := &types.Block{
 		Index:        index,
 		Timestamp:    time.Now().Unix(),
@@ -15,7 +15,7 @@ func NewBlock(index int, transactions []types.Transaction, prevHash string) *typ
 		PrevHash:     prevHash,
 		Nonce:        0, // Default nonce before mining
 		Miner:        "",
-    Difficulty:   consensus.CalculateDifficultyBits(consensus.TargetBits),
+	    Difficulty:   consensus.CalculateDifficultyBits(consensus.TargetBits),
 	}
 
 	block.Hash = block.CalculateHash()

@@ -4,6 +4,7 @@ import (
 	"blockchain/types"
 	"fmt"
  	"errors"
+	"reflect"
 )
 
 // Blockchain represents the full blockchain.
@@ -18,7 +19,7 @@ type BlockWithHeight struct {
 
 // NewBlockchain initializes a blockchain with a genesis block.
 func NewBlockchain() *Blockchain {
-	genesisBlock := NewBlock(0, []types.Transaction{}, "0")
+	genesisBlock := NewBlock(0, []types.Transaction{}, []byte{0x00})
 	return &Blockchain{Blocks: []*types.Block{genesisBlock}}
 }
 
@@ -39,10 +40,10 @@ func (bc *Blockchain) GetHeight() uint64 {
 	return uint64(len(bc.Blocks))
 }
 
-func (bc *Blockchain) GetBlock (hash string) (BlockWithHeight, error) {
+func (bc *Blockchain) GetBlock (hash []byte) (BlockWithHeight, error) {
 	var i uint64
 	for i = uint64(len(bc.Blocks) - 1); i >= 0; i-- {
-		if hash == bc.Blocks[i].Hash {
+		if reflect.DeepEqual(hash, bc.Blocks[i].Hash) {
 			return BlockWithHeight { height: i, Block: *bc.Blocks[i] }, nil
 		}
 	}
@@ -56,12 +57,12 @@ func (bc *Blockchain) IsValid() bool {
 		prevBlock := bc.Blocks[i-1]
 
 		// Validate current block hash
-		if currentBlock.Hash != currentBlock.CalculateHash() {
+		if !reflect.DeepEqual(currentBlock.Hash, currentBlock.CalculateHash()) {
 			return false
 		}
 
 		// Validate previous hash linkage
-		if currentBlock.PrevHash != prevBlock.Hash {
+		if !reflect.DeepEqual(currentBlock.PrevHash, prevBlock.Hash) {
 			return false
 		}
 	}

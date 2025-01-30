@@ -4,7 +4,8 @@ import (
   "crypto/sha256"
   "encoding/json"
   "fmt"
-  "encoding/hex"
+  "reflect"
+//  "encoding/hex"
 )
 
 // Input references an output from a previous transaction.
@@ -143,10 +144,10 @@ func (b *Block) GetDifficulty() uint32 {
 }
 
 // CalculateHash generates a hash for the block.
-func (b *Block) CalculateHash() string {
+func (b *Block) CalculateHash() []byte {
     data := fmt.Sprintf("%d%d%s%s%d", b.Index, b.Timestamp, b.PrevHash, b.serializeTransactions(), b.Nonce)
     hash := sha256.Sum256([]byte(data))
-    return hex.EncodeToString(hash[:])
+	return hash[:]
 }
 
 // serializeTransactions converts transactions to a string for hashing.
@@ -161,5 +162,5 @@ func (b *Block) serializeTransactions() string {
 // IsValid checks if the block is valid
 func (b *Block) IsValid() bool {
     // Simple validation: check if the block's hash matches the calculated hash.
-    return b.Hash == b.CalculateHash()
+    return reflect.DeepEqual(b.Hash, b.CalculateHash())
 }
