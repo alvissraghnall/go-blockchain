@@ -9,6 +9,7 @@ replace blockchain/transaction => ./transaction
 replace blockchain/wallet => ../wallet
 
 require (
+	blockchain/consensus v0.0.0-00010101000000-000000000000 // indirect
 	blockchain/transaction v0.0.0-00010101000000-000000000000 // indirect
 	blockchain/types v0.0.0-00010101000000-000000000000 // indirect
 	//	blockchain/types v0.0.0-00010101000000-000000000000 // indirect
@@ -20,3 +21,5 @@ require (
 	golang.org/x/crypto v0.22.0 // indirect
 	golang.org/x/sys v0.22.0 // indirect
 )
+
+replace blockchain/consensus => ../consensus

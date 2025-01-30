@@ -24,7 +24,7 @@ func (bdb *BlockchainDB) AddBlock(block *types.Block) error {
 
 	// Insert block
 	_, err = tx.Exec(`
-		INSERT INTO blocks (index, timestamp, transactions, prev_hash, hash, nonce, miner, blocksize, difficulty)
+		INSERT INTO blocks (id, timestamp, transactions, prev_hash, hash, nonce, miner, blocksize, difficulty)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`,
 		block.Index, block.Timestamp, txJSON, block.PrevHash, block.Hash,
@@ -149,7 +149,7 @@ func (bdb *BlockchainDB) GetBlock(hash string) (*types.Block, error) {
 	var txJSON []byte
 
 	err := bdb.db.QueryRow(`
-		SELECT index, timestamp, transactions, prev_hash, hash, 
+		SELECT id, timestamp, transactions, prev_hash, hash, 
 		       nonce, miner, blocksize, difficulty
 		FROM blocks WHERE hash = ?
 	`, hash).Scan(
@@ -195,19 +195,19 @@ func (bdb *BlockchainDB) GetBlock(hash string) (*types.Block, error) {
     // Construct query that joins blocks, transactions, inputs and outputs
     query := `
         SELECT
-            b.index, b.timestamp, b.prev_hash, b.hash, b.nonce,
+            b.id, b.timestamp, b.prev_hash, b.hash, b.nonce,
             b.miner, b.blocksize, b.difficulty,
             t.id as tx_id, t.version, t.locktime,
             ti.id as input_id, ti.previous_tx_hash, ti.output_index,
             ti.script_sig, ti.sequence,
-            to.id as output_id, to.value, to.script_pubkey,
-            to.script_type, to.address
+            tx.id as output_id, tx.value, tx.script_pubkey,
+            tx.script_type, tx.address
         FROM blocks b
         LEFT JOIN transactions t ON t.block_hash = b.hash
         LEFT JOIN transaction_inputs ti ON ti.transaction_id = t.id
-        LEFT JOIN transaction_outputs to ON to.transaction_id = t.id
+        LEFT JOIN transaction_outputs tx ON tx.transaction_id = t.id
         WHERE b.hash = ?
-        ORDER BY t.id, ti.id, to.id`
+        ORDER BY t.id, ti.id, tx.id`
 
     rows, err := bdb.db.Query(query, hash)
     if err != nil {
@@ -226,9 +226,10 @@ func (bdb *BlockchainDB) GetBlock(hash string) (*types.Block, error) {
         var (
             txID, inputID, outputID                               sql.NullInt64
             version, locktime                                     sql.NullInt64
-            prevTxHash, scriptSig, scriptType, scriptPubKey, address           sql.NullString
-            outputIndex, sequence                                sql.NullString
+            prevTxHash, scriptType, address                       sql.NullString
+            outputIndex, sequence                                 sql.NullString
             value                                                sql.NullFloat64
+            scriptSig, scriptPubKey                               []byte 
         )
 
         err := rows.Scan(
@@ -277,7 +278,7 @@ func (bdb *BlockchainDB) GetBlock(hash string) (*types.Block, error) {
                     ID:             inputID.Int64,
                     PreviousTxHash: []byte(prevTxHash.String),
                     OutputIndex:    outputIndexUint,
-                    ScriptSig:      []byte(scriptSig.String),
+                    ScriptSig:      scriptSig, // Use []byte directly
                     Sequence:       uint32(sequenceUint),
                 }
                 tx.Inputs = append(tx.Inputs, input)
@@ -288,7 +289,7 @@ func (bdb *BlockchainDB) GetBlock(hash string) (*types.Block, error) {
                 output := types.Output{
                     ID:           uint64(outputID.Int64), // Convert int64 to uint64
                     Amount:       value.Float64,
-                    ScriptPubKey: []byte(scriptPubKey.String),
+                    ScriptPubKey: scriptPubKey, // Use []byte directly
                     ScriptType:   scriptType.String,
                     Address:      []byte(address.String),
                 }

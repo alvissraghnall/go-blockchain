@@ -45,12 +45,12 @@ type Block struct {
     Index        int                 `json:"index"`
     Timestamp    int64               `json:"timestamp"`
     Transactions []Transaction   `json:"transactions"`
-    PrevHash     string                  `json:"prev_hash"`
-    Hash         string                  `json:"hash"`
+    PrevHash     []byte                  `json:"prev_hash"`
+    Hash         []byte                  `json:"hash"`
     Nonce        int                     `json:"nonce"`
     Miner        string              `json:"miner"`
     BlockSize    uint64              `json:"blocksize"`
-    Difficulty   float64             `json:"difficulty"`
+    Difficulty   uint32              `json:"difficulty"`
 }
 
 // Transaction represents a blockchain transaction.
@@ -118,11 +118,11 @@ func (b *Block) GetTransactions() []Transaction {
     return b.Transactions
 }
 
-func (b *Block) GetPrevHash() string {
+func (b *Block) GetPrevHash() []byte {
     return b.PrevHash
 }
 
-func (b *Block) GetHash() string {
+func (b *Block) GetHash() []byte {
     return b.Hash
 }
 
@@ -138,7 +138,7 @@ func (b *Block) GetBlockSize() uint64 {
     return b.BlockSize
 }
 
-func (b *Block) GetDifficulty() float64 {
+func (b *Block) GetDifficulty() uint32 {
     return b.Difficulty
 }
 
