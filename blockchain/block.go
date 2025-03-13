@@ -3,7 +3,7 @@ package blockchain
 import (
 	"time"
 	"blockchain/types"
-  "blockchain/consensus"
+    "blockchain/consensus"
 )
 
 // NewBlock creates a new block

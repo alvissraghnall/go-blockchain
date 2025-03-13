@@ -1,10 +1,13 @@
 package types
 
 import (
-  "crypto/sha256"
   "encoding/json"
   "fmt"
   "reflect"
+  "encoding/gob"
+  "bytes"
+  "crypto/sha256"
+  "encoding/binary"
 //  "encoding/hex"
 )
 
@@ -17,7 +20,7 @@ type Input struct {
     OutputIndex    uint64       `json:"outputIndex"`
     // This field represents the script signature that unlocks the previous tra>
     ScriptSig      []byte       `json:"scriptSig"`
-	Sequence       uint32  `json:"sequence"`
+	Sequence       uint32  		`json:"sequence"`
 }
 
 // Output specifies a recipient and amount.
@@ -59,8 +62,9 @@ type Transaction struct {
   ID       int64              `json:"id"`
   Version  int32              `json:"version"`
   Locktime uint32             `json:"locktime"`
-  Inputs     []Input
-  Outputs    []Output
+  Inputs   []Input  		  `json:"inputs"`
+  Outputs  []Output  		  `json:"outputs"`
+  hash     []byte   		  // cached hash
 }
 
 // NewTransaction creates a new unsigned transaction.
@@ -93,6 +97,48 @@ func NewUTXO(block Block, transaction Transaction, outputIndex uint64, amount fl
         OutputIndex:  outputIndex,
         Amount:       amount,
     }
+}
+
+// Hash returns the hash of the transaction
+func (tx *Transaction) Hash() []byte {
+    // Return cached hash if it exists
+    if tx.hash != nil {
+        return tx.hash
+    }
+
+    var buf bytes.Buffer
+    encoder := gob.NewEncoder(&buf)
+
+    // Encode transaction fields
+    binary.Write(&buf, binary.LittleEndian, tx.ID)
+    binary.Write(&buf, binary.LittleEndian, tx.Version)
+    binary.Write(&buf, binary.LittleEndian, tx.Locktime)
+
+    // Encode inputs
+    for _, input := range tx.Inputs {
+        encoder.Encode(input)
+    }
+
+    // Encode outputs
+    for _, output := range tx.Outputs {
+        encoder.Encode(output)
+    }
+
+    // Calculate hash
+    hash := sha256.Sum256(buf.Bytes())
+    // Double SHA256 
+    hash = sha256.Sum256(hash[:])
+    
+    // Cache the hash
+    tx.hash = hash[:]
+    
+    return tx.hash
+}
+
+// InvalidateHash clears the cached hash
+// Call this when modifying the transaction
+func (tx *Transaction) InvalidateHash() {
+    tx.hash = nil
 }
 
 type BlockInterface interface {
@@ -163,4 +209,83 @@ func (b *Block) serializeTransactions() string {
 func (b *Block) IsValid() bool {
     // Simple validation: check if the block's hash matches the calculated hash.
     return reflect.DeepEqual(b.Hash, b.CalculateHash())
+}
+
+// MerkleNode represents a node in the Merkle tree
+type MerkleNode struct {
+    Left  *MerkleNode
+    Right *MerkleNode
+    Data  []byte
+}
+
+// NewMerkleNode creates a new Merkle tree node
+func NewMerkleNode(left, right *MerkleNode, data []byte) *MerkleNode {
+    node := MerkleNode{}
+
+    if left == nil && right == nil {
+        // Leaf node - hash the transaction data
+        hash := sha256.Sum256(data)
+        node.Data = hash[:]
+    } else {
+        // Internal node - hash the concatenation of left and right children
+        prevHashes := append(left.Data, right.Data...)
+        hash := sha256.Sum256(prevHashes)
+        node.Data = hash[:]
+    }
+
+    node.Left = left
+    node.Right = right
+
+    return &node
+}
+
+// NewMerkleTree creates a new Merkle tree from a list of transactions
+func NewMerkleTree(txHashes [][]byte) *MerkleNode {
+    var nodes []MerkleNode
+
+    // Create leaf nodes
+    for _, hash := range txHashes {
+        node := NewMerkleNode(nil, nil, hash)
+        nodes = append(nodes, *node)
+    }
+
+    // If we have an odd number of transactions, duplicate the last one
+    if len(nodes) % 2 != 0 {
+        nodes = append(nodes, nodes[len(nodes)-1])
+    }
+
+    // Build tree by pairing nodes
+    for len(nodes) > 1 {
+        var level []MerkleNode
+
+        // Process nodes two at a time to create parent nodes
+        for i := 0; i < len(nodes); i += 2 {
+            node := NewMerkleNode(&nodes[i], &nodes[i+1], nil)
+            level = append(level, *node)
+        }
+
+        nodes = level
+    }
+
+    return &nodes[0]
+}
+
+func (b *Block) SerializeHeader() []byte {
+    var buf bytes.Buffer
+    encoder := gob.NewEncoder(&buf)
+
+    encoder.Encode(b.PrevHash)
+    encoder.Encode(b.Timestamp)
+    encoder.Encode(b.Difficulty)
+
+    // Calculate Merkle root from transactions
+    var txHashes [][]byte
+    for _, tx := range b.Transactions {
+        txHashes = append(txHashes, tx.Hash())
+    }
+    
+    merkleRoot := NewMerkleTree(txHashes).Data
+    encoder.Encode(merkleRoot)
+
+    return buf.Bytes()
 }
