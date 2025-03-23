@@ -1,18 +1,6 @@
-module gochain
+module cli
 
 go 1.23.2
-
-//require chain v0.0.0
-
-replace chain v0.0.0 => ./chain
-
-replace wallet => ./wallet
-
-replace transactions => ./transactions
-
-replace go-blockchain/cli => ./cli
-
-require go-blockchain/cli v0.0.0-00010101000000-000000000000
 
 require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
@@ -27,4 +15,4 @@ require (
 	golang.org/x/sys v0.22.0 // indirect
 )
 
-replace go-blockchain/wallet => ./wallet
+replace go-blockchain/wallet => ../wallet

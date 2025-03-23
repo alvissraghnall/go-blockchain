@@ -10,7 +10,6 @@ import (
 	"github.com/tyler-smith/go-bip39"
 )
 
-// WalletConfig allows customization of wallet generation
 type WalletConfig struct {
 	Curve       elliptic.Curve
 	WordCount   int  // 12 or 24 words
@@ -18,17 +17,15 @@ type WalletConfig struct {
 	Passphrase  string
 }
 
-// DefaultConfig provides a standard wallet configuration
 func DefaultConfig() *WalletConfig {
 	return &WalletConfig{
-		Curve:       elliptic.P256(), // Default to P256
+		Curve:       elliptic.P256(),
 		WordCount:   12,
 		UseChecksum: true,
 		Passphrase:  "",
 	}
 }
 
-// GenerateMnemonic creates a new mnemonic with configurable word count
 func GenerateMnemonic(wordCount int) (string, error) {
 	var entropyBits int
 	switch wordCount {
@@ -53,7 +50,6 @@ func GenerateMnemonic(wordCount int) (string, error) {
 	return mnemonic, nil
 }
 
-// PrivateKeyFromMnemonic derives a private key from a mnemonic phrase.
 func PrivateKeyFromMnemonic(mnemonic string, config *WalletConfig) (*ecdsa.PrivateKey, error) {
 	if !bip39.IsMnemonicValid(mnemonic) {
 		return nil, fmt.Errorf("invalid mnemonic")

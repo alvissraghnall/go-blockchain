@@ -13,11 +13,11 @@ import (
 // Uses SHA256 followed by RIPEMD-160 hashing (Bitcoin style).
 func AddressFromPublicKey(publicKey *ecdsa.PublicKey, useChecksum bool) []byte {
     publicKeyBytes := crypto.FromECDSAPub(publicKey)[1:] // Remove 0x04 prefix for uncompressed keys
-    // Use SHA256 followed by RIPEMD-160 hashing (Bitcoin style)
+
     sha256Hash := sha256.Sum256(publicKeyBytes)
 
-	secondHash := ripemd160.New()
-	secondHash.Write(sha256Hash[:])
+    secondHash := ripemd160.New()
+    secondHash.Write(sha256Hash[:])
 
     ripemd160Hash := secondHash.Sum(nil)
 
@@ -26,10 +26,9 @@ func AddressFromPublicKey(publicKey *ecdsa.PublicKey, useChecksum bool) []byte {
         return calculateChecksumAddress(address)
     }*/
     //return base58.Encode(address)
-	return address
+    return address
 }
 
-// calculateChecksumAddress adds a simple checksum mechanism
 func calculateChecksumAddress(address []byte) string {
 	hexAddress := hex.EncodeToString(address)
 	checksummed := ""
