@@ -9,6 +9,7 @@ import (
 )
 
 var wallets []*wallet.Wallet
+var defaultWalletID string
 
 var createWalletCmd = &cobra.Command{
     Use:   "createwallet",
@@ -38,15 +39,17 @@ var setDefaultWalletCmd = &cobra.Command{
     Short: "Set the default wallet",
     Args:  cobra.ExactArgs(1),
     Run: func(cmd *cobra.Command, args []string) {
-        // walletID := args[0]
-        /** for _, wallet := range wallets {
-            if wallet.alias == walletID {
-                defaultWalletID = walletID
-                fmt.Printf("Default wallet set to: %s\n", walletID)
-                return
-            }
-        fmt.Println("Wallet not found")
-	*/
+      addressOrAlias := args[0]
+      loadWallets()
+      for _, wallet := range wallets {
+        if wallet.Alias == addressOrAlias || fmt.Sprintf("%x", wallet.Address) == addressOrAlias {
+          defaultWalletID = addressOrAlias
+          fmt.Printf("Default wallet set to: %s\n", wallet.Alias)
+          return
+        }
+      }
+      fmt.Println("Wallet not found")
+      os.Exit(1)
     },
 }
 
