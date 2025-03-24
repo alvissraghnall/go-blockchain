@@ -15,7 +15,7 @@ var createWalletCmd = &cobra.Command{
     Short: "Create a new wallet",
     Run: func(cmd *cobra.Command, args []string) {
         wallet := createWallet()
-	loadWallets()
+        loadWallets()
         wallets = append(wallets, wallet)
         saveWallets()
         fmt.Printf("Wallet created: %s\n", wallet.PublicKey)
@@ -26,9 +26,10 @@ var listWalletsCmd = &cobra.Command{
     Use:   "listwallets",
     Short: "List all wallets",
     Run: func(cmd *cobra.Command, args []string) {
-        /**for _, wallet := range wallets {
-            fmt.Printf("ID: %s, Address: %s\n", wallet.ID, wallet.Address)
-        }*/
+      loadWallets()
+      for _, wallet := range wallets {
+        fmt.Printf("Alias: %s, Address: %x\n", wallet.Alias, wallet.Address)
+      }
     },
 }
 
@@ -71,8 +72,8 @@ func createWallet() *wallet.Wallet {
     wallet, err := wallet.NewWalletWithMnemonic(config)
 
     if err != nil {
-        fmt.Println("Wallet generation failed!")
-	os.Exit(1)
+      fmt.Println("Wallet generation failed!")
+      os.Exit(1)
     }
 
     return wallet
