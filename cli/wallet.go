@@ -4,7 +4,6 @@ import (
     "fmt"
     "os"
     "encoding/json"
-    "slices"
     "go-blockchain/wallet"
     "github.com/spf13/cobra"
 )
@@ -13,6 +12,7 @@ type CliWallet struct {
   DefaultWallet bool
   *wallet.Wallet
 }
+
 var wallets []CliWallet
 var defaultWalletID string
 
@@ -42,30 +42,42 @@ var listWalletsCmd = &cobra.Command{
       for _, wallet := range wallets {
         fmt.Printf("Alias: %s, Address: %x\n", wallet.Alias, wallet.Address)
       }
+      printTable(wallets, []string{"DefaultWallet", "Alias", "Address"})
     },
 }
 
+// idx := slices.IndexFunc(wallets, func(c CliWallet) bool { return fmt.Sprintf("%x", c.Address) == defaultWalletID || c.Alias == defaultWalletID })
+
 var setDefaultWalletCmd = &cobra.Command{
-    Use:   "setdefaultwallet <walletID>",
-    Short: "Set the default wallet",
-    Args:  cobra.ExactArgs(1),
-    Run: func(cmd *cobra.Command, args []string) {
-      addressOrAlias := args[0]
-      loadWallets()
-      for _, wallet := range wallets {
-        if wallet.Alias == addressOrAlias || fmt.Sprintf("%x", wallet.Address) == addressOrAlias {
-          defaultWalletID = addressOrAlias
-          loadWallets()
-          idx := slices.IndexFunc(wallets, func(c CliWallet) bool { return c.Alias == defaultWalletID })
-          wallets[idx].DefaultWallet = true
-          saveWallets()
-          fmt.Printf("Default wallet set to: %s\n", wallet.Alias)
-          return
-        }
+  Use:   "setdefaultwallet <walletID>",
+  Short: "Set the default wallet",
+  Args:  cobra.ExactArgs(1),
+  Run: func(cmd *cobra.Command, args []string) {
+    addressOrAlias := args[0]
+    loadWallets()
+    
+    for i := range wallets {
+      wallets[i].DefaultWallet = false
+    }
+    
+    found := false
+    for i, wallet := range wallets {
+      if wallet.Alias == addressOrAlias || fmt.Sprintf("%x", wallet.Address) == addressOrAlias {
+        wallets[i].DefaultWallet = true
+        defaultWalletID = addressOrAlias
+        found = true
+        break
       }
+    }
+    
+    if !found {
       fmt.Println("Wallet not found")
       os.Exit(1)
-    },
+    }
+    
+    saveWallets()
+    fmt.Printf("Default wallet set to: %s\n", addressOrAlias)
+  },
 }
 
 var getBalanceCmd = &cobra.Command{
