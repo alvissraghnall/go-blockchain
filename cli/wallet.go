@@ -4,11 +4,16 @@ import (
     "fmt"
     "os"
     "encoding/json"
+    "slices"
     "go-blockchain/wallet"
     "github.com/spf13/cobra"
 )
 
-var wallets []*wallet.Wallet
+type CliWallet struct {
+  DefaultWallet bool
+  *wallet.Wallet
+}
+var wallets []CliWallet
 var defaultWalletID string
 
 var createWalletCmd = &cobra.Command{
@@ -17,7 +22,13 @@ var createWalletCmd = &cobra.Command{
     Run: func(cmd *cobra.Command, args []string) {
         wallet := createWallet()
         loadWallets()
-        wallets = append(wallets, wallet)
+        var defaultWallet bool
+        if len(wallets) == 0 {
+          defaultWallet = true
+        } else {
+          defaultWallet = false
+        }
+        wallets = append(wallets, CliWallet { defaultWallet, wallet })
         saveWallets()
         fmt.Printf("Wallet created: %s\n", wallet.PublicKey)
     },
@@ -44,6 +55,10 @@ var setDefaultWalletCmd = &cobra.Command{
       for _, wallet := range wallets {
         if wallet.Alias == addressOrAlias || fmt.Sprintf("%x", wallet.Address) == addressOrAlias {
           defaultWalletID = addressOrAlias
+          loadWallets()
+          idx := slices.IndexFunc(wallets, func(c CliWallet) bool { return c.Alias == defaultWalletID })
+          wallets[idx].DefaultWallet = true
+          saveWallets()
           fmt.Printf("Default wallet set to: %s\n", wallet.Alias)
           return
         }
