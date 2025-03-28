@@ -10,6 +10,7 @@ type Wallet struct {
 	PrivateKey *ecdsa.PrivateKey
 	PublicKey  *ecdsa.PublicKey
 	Address    []byte
+	Alias	   string
 }
 
 func NewWalletWithMnemonic(config *WalletConfig) (*Wallet, error) {
@@ -30,6 +31,7 @@ func NewWalletWithMnemonic(config *WalletConfig) (*Wallet, error) {
 		PrivateKey: privateKey,
 		PublicKey:  publicKey,
 		Address:    address,
+		Alias:      config.Alias,
 	}, nil
 }
 
@@ -47,5 +49,6 @@ func RecoverWalletFromMnemonic(mnemonic string, config *WalletConfig) (*Wallet, 
 		PrivateKey: privateKey,
 		PublicKey:  publicKey,
 		Address:    address,
+		Alias: 	    config.Alias,
 	}, nil
 }

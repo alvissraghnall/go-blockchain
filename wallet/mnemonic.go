@@ -6,7 +6,7 @@ import (
 //"	"crypto/rand"
 	"math/big"
 	"fmt"
-
+	"time"
 	"github.com/tyler-smith/go-bip39"
 )
 
@@ -15,14 +15,20 @@ type WalletConfig struct {
 	WordCount   int  // 12 or 24 words
 	UseChecksum bool // Add optional address checksum
 	Passphrase  string
+	Alias 	    string
 }
 
 func DefaultConfig() *WalletConfig {
+	alias, err := GenerateAlias()
+	if err != nil {
+		alias += time.Now().Format("20060102150405")
+	}
 	return &WalletConfig{
 		Curve:       elliptic.P256(),
 		WordCount:   12,
 		UseChecksum: true,
 		Passphrase:  "",
+		Alias: alias,
 	}
 }
 
@@ -55,7 +61,6 @@ func PrivateKeyFromMnemonic(mnemonic string, config *WalletConfig) (*ecdsa.Priva
 		return nil, fmt.Errorf("invalid mnemonic")
 	}
 
-	// Generate seed with optional passphrase
 	seed := bip39.NewSeed(mnemonic, config.Passphrase)
 
 	// Derive private key using curve from config

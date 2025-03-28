@@ -71,7 +71,6 @@ func TestNewWalletWithMnemonic_CustomConfig(t *testing.T) {
 				t.Fatalf("Failed to create wallet: %v", err)
 			}
 
-			// Validate mnemonic word count
 			mnemonicWords := len(strings.Split(wallet.Mnemonic, " "))
 			if mnemonicWords != tc.wordCount {
 				t.Errorf("Expected %d word mnemonic, got %d words", tc.wordCount, mnemonicWords)
@@ -80,28 +79,22 @@ func TestNewWalletWithMnemonic_CustomConfig(t *testing.T) {
 	}
 }
 
-// Test wallet recovery from mnemonic
 func TestRecoverWalletFromMnemonic(t *testing.T) {
-	// Create an initial wallet
 	config := DefaultConfig()
 	originalWallet, err := NewWalletWithMnemonic(config)
 	if err != nil {
 		t.Fatalf("Failed to create original wallet: %v", err)
 	}
 
-	// Recover wallet using the same mnemonic
 	recoveredWallet, err := RecoverWalletFromMnemonic(originalWallet.Mnemonic, config)
 	if err != nil {
 		t.Fatalf("Failed to recover wallet: %v", err)
 	}
 
-	// Compare critical wallet components
 	compareWallets(t, originalWallet, recoveredWallet)
 }
 
-// Test wallet recovery with different configurations
 func TestRecoverWalletFromMnemonic_DifferentConfigs(t *testing.T) {
-	// Create an initial wallet
 	originalConfig := DefaultConfig()
 	originalWallet, err := NewWalletWithMnemonic(originalConfig)
 	if err != nil {
@@ -131,7 +124,6 @@ func TestRecoverWalletFromMnemonic_DifferentConfigs(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			// Clone the original config and modify
 			config := &WalletConfig{
 				WordCount:   originalConfig.WordCount,
 				Curve:       originalConfig.Curve,
@@ -140,13 +132,11 @@ func TestRecoverWalletFromMnemonic_DifferentConfigs(t *testing.T) {
 			}
 			tc.modifyConfig(config)
 
-			// Attempt to recover wallet
 			recoveredWallet, err := RecoverWalletFromMnemonic(originalWallet.Mnemonic, config)
 			if err != nil {
 				t.Fatalf("Failed to recover wallet: %v", err)
 			}
 
-			// Check if wallets are different
 			if tc.expectDifferent {
 				if bytes.Equal(originalWallet.Address, recoveredWallet.Address) {
 					t.Errorf("Expected different wallet addresses")
@@ -156,7 +146,6 @@ func TestRecoverWalletFromMnemonic_DifferentConfigs(t *testing.T) {
 	}
 }
 
-// Test invalid mnemonic scenarios
 func TestRecoverWalletFromMnemonic_InvalidMnemonic(t *testing.T) {
 	config := DefaultConfig()
 	
@@ -184,25 +173,20 @@ func TestRecoverWalletFromMnemonic_InvalidMnemonic(t *testing.T) {
 	}
 }
 
-// Utility function to compare wallets
 func compareWallets(t *testing.T, w1, w2 *Wallet) {
-	// Compare mnemonics
 	if w1.Mnemonic != w2.Mnemonic {
 		t.Errorf("Mnemonic mismatch: %s != %s", w1.Mnemonic, w2.Mnemonic)
 	}
 
-	// Compare addresses
 	if !bytes.Equal(w1.Address, w2.Address) {
 		t.Errorf("Address mismatch: %s != %s", w1.Address, w2.Address)
 	}
 
-	// Compare public keys
 	if !publicKeysEqual(w1.PublicKey, w2.PublicKey) {
 		t.Error("Public keys do not match")
 	}
 }
 
-// Utility function to compare public keys
 func publicKeysEqual(pk1, pk2 *ecdsa.PublicKey) bool {
 	if pk1 == nil || pk2 == nil {
 		return pk1 == pk2
@@ -213,7 +197,6 @@ func publicKeysEqual(pk1, pk2 *ecdsa.PublicKey) bool {
 		pk1.Y.Cmp(pk2.Y) == 0
 }
 
-// Benchmark wallet creation
 func BenchmarkNewWalletWithMnemonic(b *testing.B) {
 	config := DefaultConfig()
 	
@@ -226,7 +209,6 @@ func BenchmarkNewWalletWithMnemonic(b *testing.B) {
 	}
 }
 
-// Benchmark wallet recovery
 func BenchmarkRecoverWalletFromMnemonic(b *testing.B) {
 	config := DefaultConfig()
 	wallet, err := NewWalletWithMnemonic(config)
